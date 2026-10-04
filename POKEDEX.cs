@@ -6,19 +6,68 @@ namespace The_Pokedex
 {
     public partial class POKEDEX : Form
     {
-        private readonly string _connectionString;
+        private readonly string _server;
+        private readonly string _port;
+        private readonly string _user;
+        private readonly string _password;
 
         public POKEDEX()
         {
             InitializeComponent();
 
             Env.Load();
-            
-            _connectionString = Env.GetString("DB_CONNECTION_STRING");
-            if (string.IsNullOrWhiteSpace(_connectionString))
+
+            _server = Env.GetString("DB_SERVER");
+            _port = Env.GetString("DB_PORT");
+            _user = Env.GetString("DB_USER");
+            _password = Env.GetString("DB_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(_server) ||
+                string.IsNullOrWhiteSpace(_port) ||
+                string.IsNullOrWhiteSpace(_user) ||
+                string.IsNullOrWhiteSpace(_password))
             {
-                MessageBox.Show("Database connection string is not set. Please check your .env file.");
+                MessageBox.Show("Database settings are missing in the .env file.");
                 Environment.Exit(1);
+            }
+
+            LoadDatabases();
+        }
+
+        private string BuildConnectionString(string database)
+        {
+            return $"server={_server};port={_port};database={database};uid={_user};pwd={_password};";
+        }
+
+        private void LoadDatabases()
+        {
+            try
+            {
+                string masterConnectionString =
+                    $"server={_server};port={_port};uid={_user};pwd={_password};";
+
+                using MySqlConnection conn = new MySqlConnection(masterConnectionString);
+                conn.Open();
+
+                string sql = "SHOW DATABASES";
+                using MySqlCommand cmd = new MySqlCommand(sql, conn);
+                using MySqlDataReader reader = cmd.ExecuteReader();
+
+                cmbDatabase.Items.Clear();
+
+                while (reader.Read())
+                {
+                    cmbDatabase.Items.Add(reader.GetString(0));
+                }
+
+                if (cmbDatabase.Items.Count > 0)
+                {
+                    cmbDatabase.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading databases: {ex.Message}");
             }
         }
 
@@ -26,7 +75,16 @@ namespace The_Pokedex
         {
             try
             {
-                using MySqlConnection conn = new MySqlConnection(_connectionString);
+                if (cmbDatabase.SelectedItem == null)
+                {
+                    MessageBox.Show("Please select a database first.");
+                    return;
+                }
+
+                string database = cmbDatabase.SelectedItem.ToString()!;
+                string connectionString = BuildConnectionString(database);
+
+                using MySqlConnection conn = new MySqlConnection(connectionString);
                 using MySqlDataAdapter adapter = new MySqlDataAdapter(sql, conn);
                 DataTable dt = new DataTable();
                 adapter.Fill(dt);
@@ -43,13 +101,19 @@ namespace The_Pokedex
         {
             if (!string.IsNullOrWhiteSpace(rtbQuery.Text))
             {
-                string queryForThisCase = rtbQuery.Text;
-                Query(queryForThisCase);
+                Query(rtbQuery.Text);
             }
             else
             {
-                string queryForThisCase = "SELECT * FROM Pokemons";
-                Query(queryForThisCase);
+                Query("SELECT * FROM Pokemons");
+            }
+        }
+
+        private void cmbDatabase_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(rtbQuery.Text))
+            {
+                Query(rtbQuery.Text);
             }
         }
 

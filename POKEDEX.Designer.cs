@@ -50,6 +50,7 @@
             btnEvolution = new Button();
             btnTime = new Button();
             lblTableBtns = new Label();
+            cmbDatabase = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)dgvOut).BeginInit();
             SuspendLayout();
             // 
@@ -258,11 +259,21 @@
             lblTableBtns.TabIndex = 20;
             lblTableBtns.Text = "Table Queries";
             // 
+            // cmbDatabase
+            // 
+            cmbDatabase.FormattingEnabled = true;
+            cmbDatabase.Location = new Point(12, 107);
+            cmbDatabase.Name = "cmbDatabase";
+            cmbDatabase.Size = new Size(146, 23);
+            cmbDatabase.TabIndex = 21;
+            cmbDatabase.SelectedIndexChanged += cmbDatabase_SelectedIndexChanged;
+            // 
             // POKEDEX
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1275, 741);
+            Controls.Add(cmbDatabase);
             Controls.Add(lblTableBtns);
             Controls.Add(btnTime);
             Controls.Add(btnStats);
@@ -315,5 +326,6 @@
         private Button btnEvolution;
         private Button btnTime;
         private Label lblTableBtns;
+        private ComboBox cmbDatabase;
     }
 }
